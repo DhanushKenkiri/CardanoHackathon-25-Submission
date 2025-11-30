@@ -31,7 +31,7 @@
 
 #### Agent Orchestration Flow
 ![Agent Orchestration](./docs/screenshots/orchestration_flow.png)
-*3-stage orchestration: SpotFinder (0.3₳) → VehicleDetector (0.2₳) → PaymentAgent (0.4₳) = 0.9₳ total*
+*7-agent system: 2 hardware agents (QR + Sensor on Pi) + 5 AI agents (SpotFinder, PaymentAgent, DisputeResolver, etc.)*
 
 #### 3D Parking Visualization
 ![3D View](./docs/screenshots/3d_parking_view.png)
@@ -76,57 +76,88 @@ Traditional parking systems suffer from:
 
 Seven specialized agents working together through **Masumi Network**:
 
+#### Hardware Agents (Raspberry Pi)
+| Agent | Role | Platform | Cost | Status |
+|-------|------|----------|------|--------|
+| **QRAgent** | QR code scanning & vehicle validation | Pi Camera + lgpio | Free | ✅ Active |
+| **SensorAgent** | Ultrasonic distance measurement & occupancy | HC-SR04 + lgpio | Free | ✅ Active |
+
+#### Backend AI Agents (Flask + Gemini 1.5)
 | Agent | Role | AI Model | Cost | Status |
 |-------|------|----------|------|--------|
 | **Orchestrator** | Master coordinator & workflow manager | Gemini 1.5 | Free | ✅ Active |
 | **SpotFinder** | Intelligent spot ranking & recommendation | Gemini 1.5 | 0.3 ₳ | ✅ Active |
-| **VehicleDetector** | Vehicle presence & license plate validation | Gemini 1.5 | 0.2 ₳ | ✅ Active |
 | **PaymentAgent** | Real-time payment processing per minute | Gemini 1.5 | 0.4 ₳ | ✅ Active |
 | **PricingAgent** | Dynamic pricing & demand forecasting | Gemini 1.5 | Free | ✅ Active |
-| **SecurityGuard** | Fraud detection & anomaly monitoring | Gemini 1.5 | Free | ✅ Active |
 | **DisputeResolver** | AI arbitration with evidence analysis | Gemini 1.5 | 0.5 ₳ | ✅ Active |
 
-**Total Booking Cost:** 0.9 ₳ (distributed automatically via Masumi payment network)
+**Total Booking Cost:** 1.2 ₳ (0.3 + 0.4 + 0.5 via Masumi payment network)
 
 
 #### Gate-Check Architecture
 
 ```
-User clicks "Book Slot"
+User clicks "Book Slot" OR Vehicle Detected by Sensor
     ↓
+┌─────────────────────────────────────────┐
+│ HARDWARE AGENTS (Raspberry Pi)          │
+│ ┌─────────────────────────────────────┐ │
+│ │ QRAgent: Scan QR code               │ │
+│ │ ✓ Validates vehicle plate            │ │
+│ │ ✓ Checks booking authorization       │ │
+│ └─────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────┐ │
+│ │ SensorAgent: HC-SR04 distance       │ │
+│ │ ✓ Detects occupancy (< 40cm)        │ │
+│ │ ✓ Sends HTTP to Flask backend       │ │
+│ └─────────────────────────────────────┘ │
+└───────────────┬─────────────────────────┘
+                ↓
 ┌──────────────────────────────────────┐
 │ GATE 1: SpotFinder Agent (0.3 ADA)  │
 │ ✓ Analyzes available spots           │
 │ ✓ Ranks by distance & features       │
-│ ✓ Selects optimal spot (e.g., A1)    │
+│ ✓ Selects optimal spot (e.g., spot_01)│
 └──────────────┬───────────────────────┘
                ↓
-┌──────────────────────────────────────┐
-│ GATE 2: VehicleDetector (0.2 ADA)   │
-│ ✓ Checks vehicle presence            │
-│ ✓ Validates license plate match      │
-│ ✓ MUST pass: vehicle_detected=true   │
-│ ✓ MUST pass: correct_vehicle=true    │
-└──────────────┬───────────────────────┘
-               ↓
-       Both checks passed?
+       Hardware validation passed?
        Yes → Continue | No → Stop
                ↓
 ┌──────────────────────────────────────┐
-│ GATE 3: PaymentAgent (0.4 ADA)      │
+│ GATE 2: PaymentAgent (0.4 ADA)      │
 │ ✓ Creates payment session            │
 │ ✓ Starts real-time charging          │
 │ ✓ Updates every minute: 0.02 ADA/min │
+└──────────────┬───────────────────────┘
+               ↓
+┌──────────────────────────────────────┐
+│ GATE 3: DisputeResolver (0.5 ADA)   │
+│ ✓ Available if issues arise          │
+│ ✓ AI arbitration with staking        │
+│ ✓ Winner receives full pot           │
 └──────────────────────────────────────┘
 ```
 
-### 2. 🔧 Hardware Integration - Raspberry Pi Sensor
+### 2. 🔧 Hardware Integration - Raspberry Pi Agents
 
-**Automated Vehicle Detection System:**
+**Two Hardware Agents on Raspberry Pi:**
+
+#### Agent 1: QRAgent (Pi Camera Module)
+- **Role**: QR code scanning and vehicle validation
+- **Hardware**: Raspberry Pi Camera Module v2
+- **Function**: Scans QR code, validates booking authorization
+- **Output**: Vehicle plate number, booking verification
+
+#### Agent 2: SensorAgent (HC-SR04 Ultrasonic)
+- **Role**: Real-time occupancy detection
+- **Hardware**: HC-SR04 Ultrasonic Sensor + Level Converter
+- **Function**: Measures distance, triggers payment on < 40cm
+- **Output**: HTTP POST to Flask with occupancy status
 
 **Components:**
-- Raspberry Pi (any model with GPIO)
+- Raspberry Pi (any model with GPIO + Camera)
 - HC-SR04 Ultrasonic Sensor (40cm detection threshold)
+- Pi Camera Module v2 (for QR scanning)
 - Level Converter (5V → 3.3V for GPIO protection)
 - WiFi connection to Flask backend
 
@@ -217,9 +248,11 @@ System keeps: 0.5 ADA fee
                  │ HTTP/WebSocket
 ┌────────────────▼────────────────────────────────────────┐
 │                 FLASK BACKEND (Python 3.14)             │
-│  • 7 AI Agents (Gemini 1.5)                            │
+│  • 5 AI Agents (Gemini 1.5)                            │
+│    - Orchestrator, SpotFinder, PaymentAgent            │
+│    - PricingAgent, DisputeResolver                      │
 │  • REST API (CORS enabled)                             │
-│  • Hardware Sensor Endpoint                             │
+│  • Hardware Endpoint (/api/hardware/sensor-update)     │
 └─────┬───────────────────┬───────────────┬──────────────┘
       │                   │               │
       ▼                   ▼               ▼
@@ -229,18 +262,27 @@ System keeps: 0.5 ADA fee
 └──────────────┘  └──────────────┘  └──────────────┘
       ▲
       │ HTTP POST
-┌─────┴────────────────────────────────────────────┐
-│       RASPBERRY PI SENSOR (lgpio + requests)     │
-│   • HC-SR04 Ultrasonic Sensor                    │
-│   • HTTP Client (no Firebase SDK needed)         │
-└──────────────────────────────────────────────────┘
+┌─────┴────────────────────────────────────────────────────┐
+│       RASPBERRY PI - 2 HARDWARE AGENTS                   │
+│   ┌────────────────────────────────────────────────┐    │
+│   │ Agent 1: QRAgent (Pi Camera Module)           │    │
+│   │ • Scans QR codes for vehicle validation       │    │
+│   │ • Verifies booking authorization               │    │
+│   └────────────────────────────────────────────────┘    │
+│   ┌────────────────────────────────────────────────┐    │
+│   │ Agent 2: SensorAgent (HC-SR04 Ultrasonic)     │    │
+│   │ • Distance monitoring (40cm threshold)         │    │
+│   │ • Occupancy detection & HTTP POST              │    │
+│   └────────────────────────────────────────────────┘    │
+│   Platform: lgpio + requests + picamera2                 │
+└───────────────────────────────────────────────────────────┘
 ```
 
 ### Technology Stack
 
-**Backend:** Flask 3.0 (Python 3.14), Google Gemini 1.5 (7 agents), Firebase RTDB, Cardano Preprod via Blockfrost  
+**Backend:** Flask 3.0 (Python 3.14), Google Gemini 1.5 (5 AI agents), Firebase RTDB, Cardano Preprod via Blockfrost  
 **Frontend:** React 18.3 + TypeScript, Vite, Tailwind CSS + shadcn/ui, Three.js  
-**Hardware:** Raspberry Pi, HC-SR04 Ultrasonic Sensor, lgpio, HTTP POST  
+**Hardware:** Raspberry Pi (2 agents: QRAgent + SensorAgent), HC-SR04 Ultrasonic, Pi Camera v2, lgpio, picamera2  
 **DevOps:** Docker Compose (4 containers)
 
 ### Network Configuration
@@ -464,11 +506,25 @@ Sensor: distance > 40cm → Flask: end session → Display final charge
 
 ### Innovation Points
 
-🥇 **First** parking system with hardware-triggered blockchain payments  
+🥇 **First** parking system with **7-agent architecture** (2 hardware + 5 AI agents)  
+🥇 **First** hardware agents on Raspberry Pi (QRAgent + SensorAgent)  
 🥇 **First** HTTP sensor communication (no Firebase SDK on Pi)  
 🥇 **First** automated payment session creation  
 🥇 **First** AI dispute system with bilateral staking on Cardano  
 🥇 **First** professional payment dashboard for judges verification  
+
+### 7-Agent System Breakdown
+
+**Hardware Layer (Raspberry Pi):**
+- Agent 1: QRAgent (Pi Camera) - Vehicle validation
+- Agent 2: SensorAgent (HC-SR04) - Occupancy detection
+
+**Backend Layer (Flask + Gemini):**
+- Agent 3: Orchestrator - Master coordinator
+- Agent 4: SpotFinder - Intelligent spot ranking (0.3 ₳)
+- Agent 5: PaymentAgent - Real-time charging (0.4 ₳)
+- Agent 6: PricingAgent - Dynamic pricing
+- Agent 7: DisputeResolver - AI arbitration (0.5 ₳)  
 
 ### Masumi Integration Excellence
 
