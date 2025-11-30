@@ -18,10 +18,17 @@
 
 ### Hardware Setup - Raspberry Pi + HC-SR04 Sensor
 ![Circuit Diagram](./docs/screenshots/circuit_diagram_1.png)
+
+![WhatsApp Image 2025-11-30 at 12 02 58](https://github.com/user-attachments/assets/d77354e0-cd72-4e93-a8fd-d9782ac87b05)
+
+
 *HC-SR04 ultrasonic sensor connected to Raspberry Pi for automated vehicle detection*
 
 ![Raspberry Pi Setup](./docs/screenshots/circuit_diagram_2.png)
 *Complete wiring diagram with level converter (5V → 3.3V) for GPIO pins*
+
+![WhatsApp Image 2025-11-30 at 12 05 39](https://github.com/user-attachments/assets/5069b432-3a09-4a6f-92a4-5ceb7ef9b587)
+
 
 ### Application Screenshots
 
