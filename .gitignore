@@ -1,0 +1,135 @@
+# ============================================================================
+# ParknGo - AI-Powered Parking System
+# ============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Environment & Secrets
+.env.local
+.env.production
+.env.*.local
+secrets/
+*.pem
+*.key
+
+# Firebase Credentials
+*firebase-adminsdk*.json
+parkngo-firebase-adminsdk.json
+
+# Cardano Wallet Keys (CRITICAL - Never commit)
+*.skey
+*.vkey
+*.addr
+CARDANO_WALLETS_MAINNET.json
+CARDANO_WALLETS_PREPROD.json
+WALLET_SETUP_MAINNET.md
+.env.wallets
+
+# Node modules & Frontend builds
+node_modules/
+hackathon-main/node_modules/
+frontend/node_modules/
+hackathon-main/dist/
+hackathon-main/build/
+frontend/dist/
+frontend/build/
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+test_*.py
+*_test.py
+
+# Logs & Temporary Files
+*.log
+logs/
+/tmp/
+*.log.*
+*.pid
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS Files
+.DS_Store
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Redundant Documentation (Keep only core README & essential guides)
+IMPLEMENTATION_COMPLETE.md
+IMPLEMENTATION_SUMMARY.md
+IMPLEMENTATION_ROADMAP.md
+PRODUCTION_STATUS.md
+SETUP_COMPLETE.md
+TASKS.md
+ORCHESTRATION_EXPLAINED.md
+EVENT_DRIVEN_README.md
+REVISED_USER_FLOW.md
+DOCKER_DEPLOYMENT.md
+DOCKER_REALTIME_DEPLOYMENT.md
+README_REALTIME.md
+
+# Test & Demo Scripts
+demo_*.py
+simple_*.py
+monitor_*.py
+verify_*.py
+trigger_*.py
+hardware_simulator.py
+firebase_listener.py
+run_hardware_demo.py
+realtime_payment_monitor.py
+init_demo_user.py
+simple_tx_test.py
+live_tx_monitor.sh
+monitor_live_payments.py
+
+# Shell scripts (keeping deployment scripts)
+test_*.sh
+verify_*.sh
+view_transaction_hashes.sh
+
+# Build & Runtime
+uwsgi.ini
+*.pyc

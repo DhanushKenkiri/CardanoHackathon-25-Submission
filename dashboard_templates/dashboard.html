@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParknGo Payment Dashboard - Real-time Transaction Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #667eea;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-subtext {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.active {
+            background: #10b981;
+            color: white;
+        }
+
+        .badge.completed {
+            background: #6366f1;
+            color: white;
+        }
+
+        .badge.auto {
+            background: #f59e0b;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #667eea;
+        }
+
+        .amount {
+            font-weight: 600;
+            color: #10b981;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f3f4f6;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .spot-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .spot-occupied {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .spot-free {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <span>🚗</span>
+                ParknGo Payment Dashboard
+            </h1>
+            <p>Real-time transaction monitoring for automated parking payments via Cardano blockchain</p>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Active Sessions</div>
+                <div class="stat-value" id="activeSessions">-</div>
+                <div class="stat-subtext">Currently charging</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Completed Sessions</div>
+                <div class="stat-value" id="completedSessions">-</div>
+                <div class="stat-subtext">Total finished</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value" id="totalRevenue">-</div>
+                <div class="stat-subtext">ADA collected</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Bookings</div>
+                <div class="stat-value" id="totalBookings">-</div>
+                <div class="stat-subtext">All time</div>
+            </div>
+        </div>
+
+        <!-- Payment Sessions -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>💳</span>
+                    Payment Sessions
+                </div>
+                <div class="refresh-indicator">
+                    <div class="pulse"></div>
+                    Live updates every 3 seconds
+                </div>
+            </div>
+            <div id="sessionsContent">
+                <div class="loading">Loading sessions...</div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>📊</span>
+                    Recent Transactions
+                </div>
+            </div>
+            <div id="transactionsContent">
+                <div class="loading">Loading transactions...</div>
+            </div>
+        </div>
+
+        <!-- Parking Spots Status -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">
+                    <span>🅿️</span>
+                    Parking Spots Status
+                </div>
+            </div>
+            <div id="spotsContent">
+                <div class="loading">Loading spots...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp * 1000);
+            return date.toLocaleString();
+        }
+
+        // Format duration
+        function formatDuration(minutes) {
+            if (minutes < 60) return `${minutes}m`;
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours}h ${mins}m`;
+        }
+
+        // Truncate wallet address
+        function truncateWallet(wallet) {
+            if (!wallet || wallet === 'N/A') return 'N/A';
+            return wallet.substring(0, 15) + '...' + wallet.substring(wallet.length - 10);
+        }
+
+        // Fetch and update statistics
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                const stats = await response.json();
+                
+                document.getElementById('activeSessions').textContent = stats.active_sessions || 0;
+                document.getElementById('completedSessions').textContent = stats.completed_sessions || 0;
+                document.getElementById('totalRevenue').textContent = (stats.total_revenue_ada || 0).toFixed(2) + ' ₳';
+                document.getElementById('totalBookings').textContent = stats.total_bookings || 0;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Fetch and update sessions
+        async function updateSessions() {
+            try {
+                const response = await fetch('/api/dashboard/sessions');
+                const sessions = await response.json();
+                
+                const content = document.getElementById('sessionsContent');
+                
+                if (sessions.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💳</div>
+                            <div>No payment sessions yet. Waiting for vehicles...</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Spot</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Amount Charged</th>
+                                <th>Rate/Min</th>
+                                <th>Started</th>
+                                <th>Owner Wallet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                sessions.forEach(session => {
+                    const statusBadge = session.status === 'active' ? 
+                        '<span class="badge active">Active</span>' : 
+                        '<span class="badge completed">Completed</span>';
+                    
+                    const autoBadge = session.auto_created ? 
+                        ' <span class="badge auto">Auto</span>' : '';
+                    
+                    html += `
+                        <tr>
+                            <td><code>${session.session_id.substring(0, 12)}...</code></td>
+                            <td><strong>${session.spot_id}</strong></td>
+                            <td>${statusBadge}${autoBadge}</td>
+                            <td>${formatDuration(session.minutes_elapsed)}</td>
+                            <td class="amount">${session.total_deducted_ada.toFixed(4)} ₳</td>
+                            <td>${(session.rate_per_minute_lovelace / 1000).toFixed(1)}k</td>
+                            <td class="timestamp">${formatTimestamp(session.started_at)}</td>
+                            <td><span class="wallet-address">${truncateWallet(session.owner_wallet)}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                content.innerHTML = html;
+            } catch (error) {
+                console.error('Error fetching sessions:', error);
+            }
+        }
+
+        // Fetch and update transactions
+        async function updateTransactions() {
+            try {
+                const response = await fetch('/api/dashboard/transactions');
+                const transactions = await response.json();
+                
+                const content = document.getElementById('transactionsContent');
+                
+                if (transactions.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <div>No transactions yet</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Session ID</th>
+                                <th>Spot</th>
+                                <th>Minute</th>
+                                <th>Amount</th>
+                                <th>To Wallet</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                transactions.slice(0, 50).forEach(tx => {
+                    html += `
+                        <tr>
+                            <td class="timestamp">${formatTimestamp(tx.timestamp)}</td>
+                            <td><code>${tx.session_id.substring(0, 12)}...</code></td>
+                            <td><strong>${tx.spot_id}</strong></td>
+                            <td>${tx.minute}</td>
+                            <td class="amount">${tx.amount_ada.toFixed(4)} ₳</td>
+                            <td><span class="wallet-address">${truncateWallet(tx.to_wallet)}</span></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                content.innerHTML = html;
+            } catch (error) {
+                console.error('Error fetching transactions:', error);
+            }
+        }
+
+        // Fetch and update parking spots
+        async function updateSpots() {
+            try {
+                const response = await fetch('/api/dashboard/parking-spots');
+                const spots = await response.json();
+                
+                const content = document.getElementById('spotsContent');
+                
+                if (spots.length === 0) {
+                    content.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🅿️</div>
+                            <div>No parking spots configured</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Spot ID</th>
+                                <th>Status</th>
+                                <th>Distance (cm)</th>
+                                <th>Sensor ID</th>
+                                <th>Last Update</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                spots.forEach(spot => {
+                    const statusIndicator = spot.occupied ? 
+                        '<span class="spot-indicator spot-occupied">🚗 Occupied</span>' : 
+                        '<span class="spot-indicator spot-free">✓ Free</span>';
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${spot.spot_id}</strong></td>
+                            <td>${statusIndicator}</td>
+                            <td>${spot.median_cm > 0 ? spot.median_cm.toFixed(1) : 'N/A'}</td>
+                            <td><code>${spot.sensor_id}</code></td>
+                            <td class="timestamp">${formatTimestamp(spot.last_seen)}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                content.innerHTML = html;
+            } catch (error) {
+                console.error('Error fetching spots:', error);
+            }
+        }
+
+        // Update all data
+        function updateAll() {
+            updateStats();
+            updateSessions();
+            updateTransactions();
+            updateSpots();
+        }
+
+        // Initial load
+        updateAll();
+
+        // Auto-refresh every 3 seconds
+        setInterval(updateAll, 3000);
+    </script>
+</body>
+</html>

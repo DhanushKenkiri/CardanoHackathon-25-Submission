@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParknGo - Smart Parking Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --warning: #f6ad55;
+            --danger: #fc8181;
+            --info: #4299e1;
+            --dark: #1a202c;
+            --light: #f7fafc;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-bg);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .balance-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card.primary i { color: var(--primary); }
+        .stat-card.success i { color: var(--success); }
+        .stat-card.warning i { color: var(--warning); }
+        .stat-card.info i { color: var(--info); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 10px 0 5px 0;
+        }
+
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Map Section */
+        .map-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #parking-map {
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: #e2e8f0;
+            color: var(--dark);
+        }
+
+        .action-btn.secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* Active Session */
+        .active-session {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            border: 2px solid var(--primary);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .session-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Recent Activity */
+        .activity-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .activity-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background 0.3s;
+        }
+
+        .activity-item:hover {
+            background: #f7fafc;
+        }
+
+        .activity-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .activity-icon.success { background: #48bb7820; color: var(--success); }
+        .activity-icon.warning { background: #f6ad5520; color: var(--warning); }
+        .activity-icon.info { background: #4299e120; color: var(--info); }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .activity-time {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        /* Blockchain Transactions */
+        .blockchain-section {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 20px;
+        }
+
+        .tx-item {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tx-hash {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .tx-amount {
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        /* Agent Status */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg, #ffffff, #f7fafc);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--success);
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .agent-card:hover {
+            transform: translateX(5px);
+        }
+
+        .agent-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .agent-earning {
+            color: var(--success);
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .agent-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+
+        .agent-status.active {
+            background: #48bb7820;
+            color: var(--success);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Pulse Animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-parking"></i>
+                <div>
+                    <h1>ParknGo</h1>
+                    <p style="font-size: 0.9rem; color: #718096;">Smart Parking with Blockchain</p>
+                </div>
+            </div>
+            <div class="user-info">
+                <div class="balance-card">
+                    <i class="fab fa-bitcoin"></i>
+                    <span id="wallet-balance">0.00</span> ADA
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600;">User #001</div>
+                    <div style="font-size: 0.85rem; color: #718096;">Premium Member</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <i class="fas fa-car"></i>
+                <div class="stat-value" id="available-spots">0</div>
+                <div class="stat-label">Available Spots</div>
+            </div>
+            <div class="stat-card success">
+                <i class="fas fa-clock"></i>
+                <div class="stat-value" id="active-sessions">0</div>
+                <div class="stat-label">Active Sessions</div>
+            </div>
+            <div class="stat-card warning">
+                <i class="fas fa-coins"></i>
+                <div class="stat-value" id="total-spent">$0.00</div>
+                <div class="stat-label">Total Spent</div>
+            </div>
+            <div class="stat-card info">
+                <i class="fas fa-robot"></i>
+                <div class="stat-value" id="agents-active">7/7</div>
+                <div class="stat-label">AI Agents Active</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content-grid">
+            <!-- Map Section -->
+            <div class="map-section">
+                <div class="section-header">
+                    <div class="section-title">
+                        <i class="fas fa-map-marked-alt"></i>
+                        Live Parking Map
+                    </div>
+                    <button class="action-btn secondary" style="width: auto; padding: 8px 15px; margin: 0;" onclick="refreshMap()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div id="parking-map"></div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="section-title" style="margin-bottom: 15px;">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </div>
+
+                <!-- Active Session Card -->
+                <div id="active-session-card" style="display: none;">
+                    <div class="active-session">
+                        <div style="font-weight: 700; font-size: 1.1rem; margin-bottom: 10px;">
+                            <i class="fas fa-circle pulse" style="color: var(--success); font-size: 0.5rem;"></i>
+                            Active Parking Session
+                        </div>
+                        <div class="session-info">
+                            <div class="info-item">
+                                <div class="info-label">Spot</div>
+                                <div class="info-value" id="session-spot">A1</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Duration</div>
+                                <div class="info-value" id="session-duration">0:00</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Current Charge</div>
+                                <div class="info-value" id="session-charge">$0.00</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Payment Status</div>
+                                <div class="info-value" id="session-payment">Locked</div>
+                            </div>
+                        </div>
+                        <button class="action-btn primary" style="margin-top: 15px;" onclick="endSession()">
+                            <i class="fas fa-stop-circle"></i> End Session
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <button class="action-btn primary" onclick="findParking()">
+                    <i class="fas fa-search"></i> Find Parking Spot
+                </button>
+                <button class="action-btn secondary" onclick="viewHistory()">
+                    <i class="fas fa-history"></i> View History
+                </button>
+                <button class="action-btn secondary" onclick="showDisputes()">
+                    <i class="fas fa-gavel"></i> Disputes (0)
+                </button>
+                <button class="action-btn secondary" onclick="addFunds()">
+                    <i class="fas fa-wallet"></i> Add Funds
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Agents Section -->
+        <div class="blockchain-section">
+            <div class="section-title" style="margin-bottom: 15px;">
+                <i class="fas fa-robot"></i>
+                AI Agent Earnings (Real-time Blockchain)
+            </div>
+            <div class="agents-grid" id="agents-grid">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+
+        <!-- Two Column Layout -->
+        <div class="content-grid">
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <div class="section-title" style="margin-bottom: 15px;">
+                    <i class="fas fa-stream"></i>
+                    Recent Activity
+                </div>
+                <div class="activity-list" id="activity-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Blockchain Transactions -->
+            <div class="blockchain-section">
+                <div class="section-title" style="margin-bottom: 15px;">
+                    <i class="fab fa-bitcoin"></i>
+                    Blockchain Transactions
+                </div>
+                <div id="transactions-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        let map;
+        let markers = [];
+
+        function initMap() {
+            map = L.map('parking-map').setView([17.385044, 78.486671], 16);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        // Update parking spots on map
+        async function updateParkingSpots() {
+            try {
+                const response = await fetch('/api/parking/spots');
+                const data = await response.json();
+                
+                // Clear existing markers
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
+                
+                // Add markers for each spot
+                if (data.spots) {
+                    data.spots.forEach(spot => {
+                        const icon = L.divIcon({
+                            className: 'custom-marker',
+                            html: `<div style="background: ${spot.occupied ? '#fc8181' : '#48bb78'}; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;">${spot.spot_id}</div>`
+                        });
+                        
+                        const marker = L.marker([spot.location.lat, spot.location.lng], { icon })
+                            .addTo(map)
+                            .bindPopup(`
+                                <b>Spot ${spot.spot_id}</b><br>
+                                Status: ${spot.occupied ? 'Occupied' : 'Available'}<br>
+                                Type: ${spot.type || 'Standard'}<br>
+                                Price: $${(spot.pricing?.base_rate_cents || 100) / 100}/hr
+                            `);
+                        
+                        markers.push(marker);
+                    });
+                }
+            } catch (error) {
+                console.error('Error updating spots:', error);
+            }
+        }
+
+        // Update stats
+        async function updateStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+                
+                document.getElementById('available-spots').textContent = data.available_spots || 0;
+                document.getElementById('active-sessions').textContent = data.active_sessions || 0;
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }
+
+        // Update AI agents
+        async function updateAgents() {
+            try {
+                const response = await fetch('/api/agents/earnings');
+                const data = await response.json();
+                
+                const agentsGrid = document.getElementById('agents-grid');
+                const agents = [
+                    { name: 'Orchestrator', key: 'orchestrator', earning: 0.4 },
+                    { name: 'SpotFinder', key: 'spot_finder', earning: 0.3 },
+                    { name: 'Pricing', key: 'pricing_agent', earning: 0.4 },
+                    { name: 'Route Optimizer', key: 'route_optimizer', earning: 0.2 },
+                    { name: 'Payment Verifier', key: 'payment_verifier', earning: 0.2 },
+                    { name: 'Security Guard', key: 'security_guard', earning: 0.0 },
+                    { name: 'Dispute Resolver', key: 'dispute_resolver', earning: 0.0 }
+                ];
+                
+                agentsGrid.innerHTML = agents.map(agent => `
+                    <div class="agent-card">
+                        <div class="agent-name">${agent.name}</div>
+                        <div class="agent-earning">${((data.earnings?.[agent.key] || 0) / 100000000).toFixed(2)} ADA</div>
+                        <div class="agent-status active">● Active</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error updating agents:', error);
+            }
+        }
+
+        // Update activity
+        function updateActivity() {
+            const activities = [
+                { icon: 'success', iconClass: 'fa-check-circle', title: 'Parking Reserved', time: '2 min ago' },
+                { icon: 'info', iconClass: 'fa-coins', title: 'Payment Verified', time: '5 min ago' },
+                { icon: 'warning', iconClass: 'fa-robot', title: 'AI Agents Executed', time: '5 min ago' },
+                { icon: 'success', iconClass: 'fa-unlock', title: 'Spot Released', time: '15 min ago' }
+            ];
+            
+            const activityList = document.getElementById('activity-list');
+            activityList.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon ${activity.icon}">
+                        <i class="fas ${activity.iconClass}"></i>
+                    </div>
+                    <div class="activity-details">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Find parking
+        async function findParking() {
+            const btn = event.target;
+            btn.innerHTML = '<span class="loading"></span> Finding...';
+            btn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/trigger/vehicle-entry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vehicle_id: 'USER_' + Date.now(),
+                        spot_id: 'A1',
+                        user_id: 'user_001'
+                    })
+                });
+                
+                const data = await response.json();
+                alert(`Success! Session ${data.session_id} created. Watch the orchestration!`);
+                
+                updateAll();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                btn.innerHTML = '<i class="fas fa-search"></i> Find Parking Spot';
+                btn.disabled = false;
+            }
+        }
+
+        function refreshMap() {
+            updateParkingSpots();
+        }
+
+        function viewHistory() {
+            alert('History feature coming soon!');
+        }
+
+        function showDisputes() {
+            alert('Disputes feature coming soon!');
+        }
+
+        function addFunds() {
+            alert('Add funds feature coming soon!');
+        }
+
+        function endSession() {
+            alert('End session feature coming soon!');
+        }
+
+        // Update all data
+        function updateAll() {
+            updateStats();
+            updateParkingSpots();
+            updateAgents();
+            updateActivity();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            updateAll();
+            
+            // Refresh every 5 seconds
+            setInterval(updateAll, 5000);
+        });
+    </script>
+</body>
+</html>

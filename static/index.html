@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParknGo - Live Hardware Trigger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .status-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-value.active {
+            color: #28a745;
+        }
+
+        .status-value.inactive {
+            color: #dc3545;
+        }
+
+        .trigger-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .trigger-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .trigger-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .trigger-btn:active {
+            transform: translateY(0);
+        }
+
+        .trigger-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .orchestration-monitor {
+            background: #1e1e1e;
+            color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-left: 3px solid transparent;
+        }
+
+        .log-entry.info {
+            border-left-color: #17a2b8;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+        }
+
+        .log-entry.warning {
+            border-left-color: #ffc107;
+        }
+
+        .timestamp {
+            color: #6c757d;
+            margin-right: 10px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .agent-status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .agent-card {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            font-size: 0.9em;
+        }
+
+        .agent-card.pending {
+            border-left-color: #ffc107;
+        }
+
+        .agent-card.error {
+            border-left-color: #dc3545;
+        }
+
+        .clear-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .clear-btn:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 ParknGo Live Trigger</h1>
+        <p class="subtitle">Production Hardware Simulation with Real Agent Orchestration</p>
+
+        <div class="status-bar">
+            <div class="section-title">System Status</div>
+            <div class="status-item">
+                <span class="status-label">API Server:</span>
+                <span class="status-value" id="api-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Firebase:</span>
+                <span class="status-value" id="firebase-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Active Agents:</span>
+                <span class="status-value" id="agent-count">0/7</span>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>📌 How it works:</strong> Click the button below to simulate a vehicle entering the parking lot. 
+            This writes to Firebase → Firebase listener detects the change → Orchestrator triggers all 7 AI agents 
+            → You'll see the real orchestration happen in real-time below.
+        </div>
+
+        <div class="trigger-section">
+            <div class="section-title">🚦 Vehicle Entry Trigger</div>
+            <button class="trigger-btn" id="trigger-entry" onclick="triggerVehicleEntry()">
+                🚗 TRIGGER VEHICLE ENTRY
+            </button>
+            <p style="margin-top: 15px; color: #666; font-size: 0.95em;" id="trigger-info">
+                Click to simulate a car entering spot A1
+            </p>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+            <div class="section-title" style="display: inline-block;">📊 Live Orchestration Monitor</div>
+            <button class="clear-btn" onclick="clearLogs()" style="float: right;">Clear Logs</button>
+        </div>
+        <div class="orchestration-monitor" id="log-container">
+            <div class="log-entry info">
+                <span class="timestamp">[Ready]</span>
+                <span>Waiting for vehicle entry trigger...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let orchestrationInProgress = false;
+        let pollInterval = null;
+
+        // Check system status on load
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                document.getElementById('api-status').textContent = data.status === 'healthy' ? 'Online' : 'Degraded';
+                document.getElementById('api-status').className = 'status-value ' + (data.status === 'healthy' ? 'active' : 'inactive');
+                
+                document.getElementById('firebase-status').textContent = data.services?.firebase === 'connected' ? 'Connected' : 'Disconnected';
+                document.getElementById('firebase-status').className = 'status-value ' + (data.services?.firebase === 'connected' ? 'active' : 'inactive');
+                
+                const agentCount = Object.values(data.agents || {}).filter(status => status === 'ready').length;
+                document.getElementById('agent-count').textContent = `${agentCount}/7`;
+                document.getElementById('agent-count').className = 'status-value ' + (agentCount === 7 ? 'active' : 'inactive');
+                
+            } catch (error) {
+                addLog('error', 'Failed to check system status: ' + error.message);
+            }
+        }
+
+        async function triggerVehicleEntry() {
+            if (orchestrationInProgress) {
+                alert('Orchestration already in progress. Please wait...');
+                return;
+            }
+
+            const btn = document.getElementById('trigger-entry');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner"></span> PROCESSING...';
+            orchestrationInProgress = true;
+
+            document.getElementById('trigger-info').textContent = 'Writing to Firebase...';
+
+            try {
+                // Call the trigger endpoint
+                addLog('info', '🚗 Triggering vehicle entry...');
+                
+                const response = await fetch('/api/trigger/vehicle-entry', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        vehicle_id: 'WEB_' + Date.now(),
+                        spot_id: 'A1',
+                        user_id: 'web_user_001'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    addLog('success', '✅ Vehicle entry recorded in Firebase');
+                    addLog('info', `📍 Session ID: ${data.session_id}`);
+                    addLog('info', '⏳ Firebase listener detecting change...');
+                    
+                    document.getElementById('trigger-info').textContent = 'Firebase updated! Waiting for orchestration...';
+                    
+                    // Start polling for orchestration results
+                    startOrchestrationPolling(data.session_id);
+                    
+                } else {
+                    addLog('error', '❌ Failed to trigger entry: ' + data.error);
+                    resetButton();
+                }
+
+            } catch (error) {
+                addLog('error', '❌ Error: ' + error.message);
+                resetButton();
+            }
+        }
+
+        async function startOrchestrationPolling(sessionId) {
+            addLog('info', '🔍 Monitoring orchestration progress...');
+            
+            let attempts = 0;
+            const maxAttempts = 30; // 30 seconds max
+
+            pollInterval = setInterval(async () => {
+                attempts++;
+                
+                try {
+                    const response = await fetch(`/api/orchestration/status/${sessionId}`);
+                    const data = await response.json();
+
+                    if (data.orchestration_complete) {
+                        clearInterval(pollInterval);
+                        
+                        addLog('success', '🎉 ORCHESTRATION COMPLETE!');
+                        
+                        if (data.details) {
+                            addLog('info', `🎯 Recommended Spot: ${data.details.recommended_spot || 'N/A'}`);
+                            addLog('info', `💰 Price: ${data.details.total_price || 'N/A'} ADA`);
+                            addLog('info', `🔗 Payment ID: ${data.details.payment_id || 'N/A'}`);
+                            
+                            if (data.details.agents_triggered) {
+                                addLog('success', `✅ ${data.details.agents_triggered.length} agents executed successfully`);
+                                data.details.agents_triggered.forEach(agent => {
+                                    addLog('info', `  • ${agent}`);
+                                });
+                            }
+                        }
+                        
+                        document.getElementById('trigger-info').textContent = 'Orchestration completed successfully!';
+                        resetButton();
+                        
+                    } else if (data.status === 'processing') {
+                        addLog('info', `⏳ Status: ${data.message || 'Processing...'}`);
+                    } else if (data.error) {
+                        clearInterval(pollInterval);
+                        addLog('error', '❌ Orchestration failed: ' + data.error);
+                        resetButton();
+                    }
+                    
+                    if (attempts >= maxAttempts) {
+                        clearInterval(pollInterval);
+                        addLog('warning', '⚠️ Polling timeout - orchestration may still be running');
+                        resetButton();
+                    }
+                    
+                } catch (error) {
+                    addLog('warning', 'Polling error: ' + error.message);
+                }
+                
+            }, 1000); // Poll every second
+        }
+
+        function resetButton() {
+            const btn = document.getElementById('trigger-entry');
+            btn.disabled = false;
+            btn.innerHTML = '🚗 TRIGGER VEHICLE ENTRY';
+            orchestrationInProgress = false;
+            document.getElementById('trigger-info').textContent = 'Ready for next trigger';
+        }
+
+        function addLog(type, message) {
+            const logContainer = document.getElementById('log-container');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.innerHTML = `<span class="timestamp">[${timestamp}]</span><span>${message}</span>`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function clearLogs() {
+            const logContainer = document.getElementById('log-container');
+            logContainer.innerHTML = '<div class="log-entry info"><span class="timestamp">[Ready]</span><span>Logs cleared. Waiting for trigger...</span></div>';
+        }
+
+        // Initialize
+        checkSystemStatus();
+        setInterval(checkSystemStatus, 5000); // Refresh status every 5 seconds
+    </script>
+</body>
+</html>

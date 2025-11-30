@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ParknGo - AMB Mall</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-left h1 {
+            font-size: 1.3rem;
+        }
+
+        .header-left p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .wallet-balance {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: white;
+            margin-bottom: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 20px 20px;
+        }
+
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        /* Map */
+        #parking-map {
+            height: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        /* Feature Cards */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .feature-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #2d3748;
+        }
+
+        .feature-desc {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        /* Action Button */
+        .action-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Active Session */
+        .active-session {
+            background: linear-gradient(135deg, #48bb7820, #38a16920);
+            border: 2px solid #48bb78;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .session-status {
+            background: #48bb78;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .session-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 3px;
+        }
+
+        .detail-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #2d3748;
+        }
+
+        .close-btn {
+            background: #e2e8f0;
+            color: #2d3748;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .quick-stats {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .session-details {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div>
+                <h1>🅿️ ParknGo</h1>
+                <p>AMB Mall, Hyderabad</p>
+            </div>
+        </div>
+        <div class="user-info">
+            <div class="user-name" id="userName">Guest</div>
+            <div class="wallet-balance">Balance: ₹<span id="walletBalance">500</span></div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="quick-stats">
+        <div class="stat-item">
+            <div class="stat-value" id="availableSpots">--</div>
+            <div class="stat-label">Available</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">₹<span id="currentRate">40</span>/hr</div>
+            <div class="stat-label">Current Rate</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="estimatedTime">2</div>
+            <div class="stat-label">Min Walk</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Active Session -->
+        <div id="activeSessionCard" style="display: none;">
+            <div class="active-session">
+                <div class="session-header">
+                    <h3 style="margin: 0;">Active Parking</h3>
+                    <div class="session-status">● ACTIVE</div>
+                </div>
+                <div class="session-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Spot</div>
+                        <div class="detail-value" id="sessionSpot">A1-15</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Duration</div>
+                        <div class="detail-value" id="sessionDuration">0:00</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Current Charge</div>
+                        <div class="detail-value">₹<span id="sessionCharge">0</span></div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Floor</div>
+                        <div class="detail-value" id="sessionFloor">Ground</div>
+                    </div>
+                </div>
+                <button class="action-btn" style="margin-top: 15px;" onclick="endParking()">
+                    End Parking Session
+                </button>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="section">
+            <div class="section-title">🗺️ Live Parking Map</div>
+            <div id="parking-map"></div>
+        </div>
+
+        <!-- Find Parking -->
+        <button class="action-btn" id="findParkingBtn" onclick="findParking()">
+            🚗 Find My Parking Spot
+        </button>
+
+        <!-- AI Features -->
+        <div class="section">
+            <div class="section-title">✨ Smart Features</div>
+            <div class="features-grid">
+                <div class="feature-card" onclick="showFeature('smartPricing')">
+                    <div class="feature-icon">💰</div>
+                    <div class="feature-title">Smart Pricing</div>
+                    <div class="feature-desc">Real-time rates based on demand</div>
+                </div>
+
+                <div class="feature-card" onclick="showFeature('spotFinder')">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Best Spot Finder</div>
+                    <div class="feature-desc">Closest to your destination</div>
+                </div>
+
+                <div class="feature-card" onclick="showFeature('navigation')">
+                    <div class="feature-icon">🧭</div>
+                    <div class="feature-title">Indoor Navigation</div>
+                    <div class="feature-desc">Step-by-step directions</div>
+                </div>
+
+                <div class="feature-card" onclick="showFeature('securePayment')">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-title">Secure Payment</div>
+                    <div class="feature-desc">Pay only for time used</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Feature</div>
+            <div id="modalContent"></div>
+            <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Check login
+        const user = JSON.parse(localStorage.getItem('parkUser') || '{}');
+        if (!user.name) {
+            window.location.href = '/login';
+        }
+        document.getElementById('userName').textContent = user.name;
+
+        // Map
+        let map;
+        function initMap() {
+            map = L.map('parking-map').setView([17.4239, 78.4738], 17);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
+
+        // Update stats
+        async function updateStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                document.getElementById('availableSpots').textContent = data.available_spots || 0;
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // Find parking
+        async function findParking() {
+            const btn = document.getElementById('findParkingBtn');
+            btn.disabled = true;
+            btn.textContent = '🔍 Finding best spot...';
+
+            try {
+                const res = await fetch('/api/trigger/vehicle-entry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vehicle_id: 'USER_' + Date.now(),
+                        user_id: user.phone,
+                        user_name: user.name
+                    })
+                });
+
+                const data = await res.json();
+                
+                // Show active session
+                document.getElementById('activeSessionCard').style.display = 'block';
+                document.getElementById('sessionSpot').textContent = 'A1-15';
+                document.getElementById('sessionFloor').textContent = 'Ground Floor';
+                
+                // Start timer
+                startSessionTimer();
+                
+                btn.textContent = '✅ Parking Reserved!';
+                setTimeout(() => {
+                    btn.style.display = 'none';
+                }, 2000);
+
+            } catch (e) {
+                alert('Error: ' + e.message);
+                btn.disabled = false;
+                btn.textContent = '🚗 Find My Parking Spot';
+            }
+        }
+
+        // Session timer
+        let sessionStart = Date.now();
+        let timerInterval;
+
+        function startSessionTimer() {
+            sessionStart = Date.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Date.now() - sessionStart;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('sessionDuration').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Calculate charge (₹40/hr = ₹0.67/min)
+                const charge = Math.ceil(minutes * 0.67);
+                document.getElementById('sessionCharge').textContent = charge;
+            }, 1000);
+        }
+
+        function endParking() {
+            if (confirm('End your parking session?')) {
+                clearInterval(timerInterval);
+                document.getElementById('activeSessionCard').style.display = 'none';
+                document.getElementById('findParkingBtn').style.display = 'block';
+                alert('Parking ended. Total charge: ₹' + document.getElementById('sessionCharge').textContent);
+            }
+        }
+
+        // Show feature modal
+        function showFeature(feature) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modalTitle');
+            const content = document.getElementById('modalContent');
+
+            const features = {
+                smartPricing: {
+                    title: '💰 Smart Pricing',
+                    content: `
+                        <p style="margin-bottom: 15px;">Our AI analyzes real-time demand to give you the best rates:</p>
+                        <ul style="line-height: 1.8;">
+                            <li>Current Rate: ₹40/hour</li>
+                            <li>Peak Hours (6PM-9PM): ₹60/hour</li>
+                            <li>Weekend Premium: +20%</li>
+                            <li>Early Bird (before 10AM): ₹30/hour</li>
+                        </ul>
+                        <p style="margin-top: 15px; color: #48bb78; font-weight: 600;">
+                            You're saving ₹20 compared to standard rates!
+                        </p>
+                    `
+                },
+                spotFinder: {
+                    title: '🎯 Best Spot Finder',
+                    content: `
+                        <p style="margin-bottom: 15px;">We find the perfect spot based on:</p>
+                        <ul style="line-height: 1.8;">
+                            <li>Closest to mall entrance you need</li>
+                            <li>Covered vs open parking preference</li>
+                            <li>EV charging availability</li>
+                            <li>Disabled access if required</li>
+                            <li>Vehicle size compatibility</li>
+                        </ul>
+                        <p style="margin-top: 15px; color: #667eea; font-weight: 600;">
+                            Average walking time: 2 minutes to entrance
+                        </p>
+                    `
+                },
+                navigation: {
+                    title: '🧭 Indoor Navigation',
+                    content: `
+                        <p style="margin-bottom: 15px;">Never get lost in the parking lot:</p>
+                        <ul style="line-height: 1.8;">
+                            <li>Turn-by-turn directions from entrance</li>
+                            <li>Visual landmarks and signage</li>
+                            <li>Elevator and staircase locations</li>
+                            <li>Return navigation to your car</li>
+                            <li>AR directions (coming soon)</li>
+                        </ul>
+                    `
+                },
+                securePayment: {
+                    title: '🔒 Secure Payment',
+                    content: `
+                        <p style="margin-bottom: 15px;">Your payments are protected:</p>
+                        <ul style="line-height: 1.8;">
+                            <li>Pay only for actual time parked</li>
+                            <li>Blockchain-secured transactions</li>
+                            <li>Auto-refund if spot unavailable</li>
+                            <li>AI dispute resolution</li>
+                            <li>100% transparent billing</li>
+                        </ul>
+                        <p style="margin-top: 15px; color: #48bb78; font-weight: 600;">
+                            Current wallet balance: ₹500
+                        </p>
+                    `
+                }
+            };
+
+            title.textContent = features[feature].title;
+            content.innerHTML = features[feature].content;
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        // Init
+        initMap();
+        updateStats();
+        setInterval(updateStats, 5000);
+    </script>
+</body>
+</html>

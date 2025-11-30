@@ -1,0 +1,74 @@
+╔════════════════════════════════════════════════════════════════════════╗
+║                                                                        ║
+║        🔍 PARKNGO REAL-TIME PAYMENT VERIFICATION                      ║
+║                      Quick Reference                                   ║
+║                                                                        ║
+╚════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 🚀 FASTEST WAY TO VERIFY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  python3 monitor_live_payments.py
+
+  → Shows ALL transaction hashes in real-time
+  → Both user→owner AND owner→agent payments
+  → Auto-starts services, auto-cleanup
+  → Runs for 3 minutes, displays summary
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 📊 WHAT YOU'LL SEE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  10 TOTAL TRANSACTIONS:
+
+  🎯 7 AGENT PAYMENTS (Owner → Agents)
+     • Orchestrator:      1.5 ADA  → TX: abc123...
+     • Pricing Agent:     1.4 ADA  → TX: def456...
+     • Spot Finder:       1.3 ADA  → TX: ghi789...
+     • Security Guard:    1.25 ADA → TX: jkl012...
+     • Payment Verifier:  1.2 ADA  → TX: mno345...
+     • Route Optimizer:   1.2 ADA  → TX: pqr678...
+     • Dispute Resolver:  1.15 ADA → TX: stu901...
+     
+     TOTAL: 8.95 ADA
+
+  💰 3 USER PAYMENTS (User → Owner, per-minute)
+     • Payment #1 (0:00): 0.2 ADA → TX: vwx234...
+     • Payment #2 (1:00): 0.2 ADA → TX: yz0567...
+     • Payment #3 (2:00): 0.2 ADA → TX: abc890...
+     
+     TOTAL: 0.6 ADA
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 🔧 OTHER OPTIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ./live_tx_monitor.sh
+  → Bash version with fancy ASCII boxes
+
+  ./verify_realtime_complete.sh
+  → Full 8-step verification with detailed logging
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 📖 FULL DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  cat VERIFICATION_SUMMARY.md         → Quick overview
+  cat REALTIME_VERIFICATION_GUIDE.md  → Complete guide
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ✅ WHAT GETS VERIFIED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ Firebase state: occupied false→true triggers payments
+  ✓ User→Owner: 0.2 ADA per minute with TX hashes
+  ✓ Owner→Agents: 7 payments with TX hashes
+  ✓ Real blockchain transactions on Cardano Preprod
+  ✓ All TX hashes displayed in terminal
+  ✓ Data stored in Firebase correctly
+  ✓ CardanoScan explorer links working
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  All TX hashes are REAL and verifiable on blockchain! 🚀
