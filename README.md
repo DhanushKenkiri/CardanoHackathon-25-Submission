@@ -29,17 +29,29 @@
 ![Landing Page](./docs/screenshots/landing_page.png)
 *ParknGo homepage showing 1 available spot, 7 AI agents, and 100% real blockchain integration*
 
+<img width="1280" height="832" alt="Screenshot 2025-11-30 at 12 23 32 PM" src="https://github.com/user-attachments/assets/5ac53ed9-42eb-4856-8872-b185b6d7c849" />
+
+
 #### Agent Orchestration Flow
 ![Agent Orchestration](./docs/screenshots/orchestration_flow.png)
 *7-agent system: 2 hardware agents (QR + Sensor on Pi) + 5 AI agents (SpotFinder, PaymentAgent, DisputeResolver, etc.)*
+
+<img width="1280" height="832" alt="Screenshot 2025-11-30 at 12 23 40 PM" src="https://github.com/user-attachments/assets/5c479266-0355-48af-a3e9-d0557d185afd" />
+
 
 #### 3D Parking Visualization
 ![3D View](./docs/screenshots/3d_parking_view.png)
 *Interactive 3D parking lot with real-time spot status and auto-payment trigger*
 
+<img width="1280" height="832" alt="Screenshot 2025-11-30 at 12 24 00 PM" src="https://github.com/user-attachments/assets/f8b23d69-2cfb-4ae8-880a-3f95b735673d" />
+
+
 #### AI Dispute Resolution
 ![Dispute Management](./docs/screenshots/dispute_resolution.png)
 *Gemini-powered arbitration with bilateral staking and transparent resolution*
+
+<img width="1280" height="832" alt="Screenshot 2025-11-30 at 12 23 46 PM" src="https://github.com/user-attachments/assets/aa43e2cc-387d-4b9b-bbe7-c09378137f4f" />
+
 
 ---
 
